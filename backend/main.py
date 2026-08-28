@@ -103,29 +103,19 @@ async def fix_path_middleware(request: Request, call_next):
     return response
 
 def get_client(model: str):
-    model_aliases = {
-        "meta/llama-3.3-70b-instruct": "meta/llama-3.2-11b-vision-instruct",
-        "meta/llama-3.1-70b-instruct": "meta/llama-3.2-11b-vision-instruct",
-        "meta/llama-3.1-8b-instruct": "meta/llama-3.2-11b-vision-instruct",
-        "nvidia/nemotron-3-ultra-550b-a55b": "nvidia/nemotron-3-super-120b-a12b",
-        "nvidia/llama-3.1-nemotron-70b-instruct": "nvidia/nemotron-3-super-120b-a12b"
-    }
-    actual_model = model_aliases.get(model, model)
-    
     key_map = {
-        "meta/llama-3.2-11b-vision-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
-        "meta/llama-3.2-90b-vision-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
-        "nvidia/nemotron-3-super-120b-a12b": os.getenv("NVIDIA_NEMOTRON_API_KEY"),
+        "nvidia/nemotron-3-ultra-550b-a55b": os.getenv("NVIDIA_NEMOTRON_API_KEY"),
+        "meta/llama-3.3-70b-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
         "deepseek-ai/deepseek-v4-flash-0731": os.getenv("NVIDIA_DEEPSEEK_API_KEY"),
         "moonshotai/kimi-k3": os.getenv("NVIDIA_KIMI_API_KEY")
     }
     
-    api_key = key_map.get(actual_model)
+    api_key = key_map.get(model)
     if not api_key:
         api_key = (
+            os.getenv("NVIDIA_NEMOTRON_API_KEY") or 
             os.getenv("NVIDIA_LLAMA_API_KEY") or 
             os.getenv("NVIDIA_DEEPSEEK_API_KEY") or 
-            os.getenv("NVIDIA_NEMOTRON_API_KEY") or 
             os.getenv("NVIDIA_KIMI_API_KEY") or
             os.getenv("NVIDIA_API_KEY")
         )
@@ -140,7 +130,7 @@ def get_client(model: str):
         base_url="https://integrate.api.nvidia.com/v1",
         api_key=api_key
     )
-    return client, actual_model
+    return client, model
 
 @app.get("/")
 @app.get("/api")

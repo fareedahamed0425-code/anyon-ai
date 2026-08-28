@@ -154,7 +154,7 @@ const TreeNode = ({ node, onRemove }) => {
 };
 
 function App() {
-  const [model, setModel] = useState('meta/llama-3.2-11b-vision-instruct');
+  const [model, setModel] = useState('nvidia/nemotron-3-ultra-550b-a55b');
   const [chatList, setChatList] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -574,9 +574,8 @@ function App() {
                 onChange={(e) => setModel(e.target.value)}
                 className="model-select"
               >
-                <option value="meta/llama-3.2-11b-vision-instruct">Llama 3.2 11B Vision</option>
-                <option value="meta/llama-3.2-90b-vision-instruct">Llama 3.2 90B Vision</option>
-                <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B</option>
+                <option value="nvidia/nemotron-3-ultra-550b-a55b">Nemotron 3 Ultra 550B</option>
+                <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
                 <option value="deepseek-ai/deepseek-v4-flash-0731">DeepSeek V4 Flash</option>
               </select>
             </div>
