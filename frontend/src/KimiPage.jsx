@@ -6,7 +6,7 @@ import mermaid from 'mermaid';
 import './index.css';
 import { auth } from './firebase';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').trim().replace(/\/$/, '');
 
 const fetchWithAuth = async (url, options = {}) => {
   const uid = auth.currentUser?.uid;
@@ -14,7 +14,8 @@ const fetchWithAuth = async (url, options = {}) => {
   if (uid) {
     headers['X-User-UID'] = uid;
   }
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  const endpoint = url.startsWith('/') ? url : `/${url}`;
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${endpoint}`;
   return fetch(fullUrl, { ...options, headers });
 };
 
