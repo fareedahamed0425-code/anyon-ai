@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: anyon-ai-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NVIDIA_NEMOTRON_API_KEY
+        sync: false
+      - key: NVIDIA_LLAMA_API_KEY
+        sync: false
+      - key: NVIDIA_DEEPSEEK_API_KEY
+        sync: false
+      - key: NVIDIA_KIMI_API_KEY
+        sync: false
