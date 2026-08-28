@@ -381,8 +381,36 @@ File Contents:"""
         
     async def event_generator():
         full_content = ""
+        stream = None
+        target_model = req.model
+        
+        # Candidate models to try in order if the primary model returns 404/410 from NVIDIA
+        candidates = [target_model]
+        if "nemotron" in target_model:
+            candidates.extend(["nvidia/nemotron-3-super-120b-a12b", "nvidia/nemotron-3-nano-30b-a3b"])
+        elif "llama" in target_model:
+            candidates.extend(["meta/llama-3.2-11b-vision-instruct", "meta/llama-3.2-90b-vision-instruct"])
+        elif "deepseek" in target_model:
+            candidates.extend(["deepseek-ai/deepseek-v4-flash-0731", "deepseek-ai/deepseek-v4-pro-0813"])
+        
+        for candidate in candidates:
+            try:
+                current_kwargs = dict(kwargs)
+                current_kwargs["model"] = candidate
+                stream = await client.chat.completions.create(**current_kwargs)
+                break
+            except Exception as e:
+                err_str = str(e)
+                print(f"[-] Candidate {candidate} failed: {err_str}")
+                # If 404 (function not found) or 410 (gone), try next candidate
+                if ("404" in err_str or "410" in err_str) and candidate != candidates[-1]:
+                    continue
+                else:
+                    yield f"data: {json.dumps({'error': err_str})}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
+
         try:
-            stream = await client.chat.completions.create(**kwargs)
             async for chunk in stream:
                 if not chunk.choices:
                     continue
