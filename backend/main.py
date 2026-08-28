@@ -391,7 +391,7 @@ File Contents:"""
         full_content = ""
         target_model = req.model
         
-        # Candidate models to try in order if the primary model returns 404/410 from NVIDIA
+        # Candidate models to try in order if the primary model returns 404/410/429 from NVIDIA
         candidates = [target_model]
         if "nemotron" in target_model:
             candidates.extend(["nvidia/nemotron-3-super-120b-a12b", "nvidia/nemotron-3-nano-30b-a3b"])
@@ -399,6 +399,8 @@ File Contents:"""
             candidates.extend(["meta/llama-3.2-11b-vision-instruct", "meta/llama-3.2-90b-vision-instruct"])
         elif "deepseek" in target_model:
             candidates.extend(["deepseek-ai/deepseek-v4-flash-0731", "deepseek-ai/deepseek-v4-pro-0813"])
+        elif "kimi" in target_model:
+            candidates.extend(["meta/llama-3.2-11b-vision-instruct", "nvidia/nemotron-3-super-120b-a12b"])
         
         for candidate in candidates:
             try:
@@ -428,7 +430,8 @@ File Contents:"""
             except Exception as e:
                 err_str = str(e)
                 print(f"[-] Candidate {candidate} failed during stream: {err_str}")
-                if not full_content and ("404" in err_str or "410" in err_str) and candidate != candidates[-1]:
+                if not full_content and any(code in err_str.lower() for code in ["404", "410", "429", "timeout", "timed out", "too many requests"]) and candidate != candidates[-1]:
+                    await asyncio.sleep(0.5)
                     continue
                 else:
                     yield f"data: {json.dumps({'error': err_str})}\n\n"
