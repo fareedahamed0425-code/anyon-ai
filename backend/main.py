@@ -470,4 +470,5 @@ async def download_temp_file(filename: str, background_tasks: BackgroundTasks):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8008)
+    port = int(os.environ.get("PORT", 8008))
+    uvicorn.run(app, host="0.0.0.0", port=port)

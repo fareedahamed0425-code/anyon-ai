@@ -26,5 +26,4 @@ RUN mkdir -p /app/cache
 
 EXPOSE 8008
 
-# Start FastAPI server on dynamic $PORT
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8008}"]
+CMD ["python", "main.py"]
