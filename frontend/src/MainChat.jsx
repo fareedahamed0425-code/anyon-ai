@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import mermaid from 'mermaid';
@@ -521,6 +522,17 @@ function App() {
             New
           </button>
         </div>
+
+        {/* Mode Selector in Sidebar */}
+        <div style={{ padding: '0 12px 12px', display: 'flex', gap: '8px' }}>
+          <div style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: '10px', background: 'var(--accent)', color: '#fff', fontSize: '0.85rem', fontWeight: 600 }}>
+            Base Models
+          </div>
+          <Link to="/kimi" style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>
+            Kimi K3
+          </Link>
+        </div>
+
         <div className="chat-list">
           {chatList.map(chat => (
             <div 
@@ -534,6 +546,15 @@ function App() {
               </button>
             </div>
           ))}
+        </div>
+
+        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <button 
+            onClick={() => auth.signOut()}
+            style={{ width: '100%', padding: '10px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', cursor: 'pointer', fontWeight: 500 }}
+          >
+            Logout
+          </button>
         </div>
       </aside>
 
@@ -554,6 +575,9 @@ function App() {
                 <option value="deepseek-ai/deepseek-v4-flash-0731">DeepSeek V4 Flash</option>
               </select>
             </div>
+            <Link to="/kimi" style={{ padding: '6px 14px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🧠</span> Switch to Kimi K3 (Vision)
+            </Link>
             <button className="toggle-sidebar-btn" onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} title="Toggle Context">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="15" y1="3" x2="15" y2="21"></line></svg>
             </button>
