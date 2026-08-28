@@ -6,13 +6,16 @@ import mermaid from 'mermaid';
 import './index.css';
 import { auth } from './firebase';
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
+
 const fetchWithAuth = async (url, options = {}) => {
   const uid = auth.currentUser?.uid;
   const headers = { ...options.headers };
   if (uid) {
     headers['X-User-UID'] = uid;
   }
-  return fetch(url, { ...options, headers });
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  return fetch(fullUrl, { ...options, headers });
 };
 
 mermaid.initialize({ startOnLoad: false, theme: 'dark' });
