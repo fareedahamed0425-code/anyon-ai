@@ -105,8 +105,13 @@ async def fix_path_middleware(request: Request, call_next):
 def get_client(model: str):
     key_map = {
         "nvidia/nemotron-3-ultra-550b-a55b": os.getenv("NVIDIA_NEMOTRON_API_KEY"),
+        "nvidia/nemotron-3-super-120b-a12b": os.getenv("NVIDIA_NEMOTRON_API_KEY"),
+        "nvidia/nemotron-3-nano-30b-a3b": os.getenv("NVIDIA_NEMOTRON_API_KEY"),
         "meta/llama-3.3-70b-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
+        "meta/llama-3.2-11b-vision-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
+        "meta/llama-3.2-90b-vision-instruct": os.getenv("NVIDIA_LLAMA_API_KEY"),
         "deepseek-ai/deepseek-v4-flash-0731": os.getenv("NVIDIA_DEEPSEEK_API_KEY"),
+        "deepseek-ai/deepseek-v4-pro-0813": os.getenv("NVIDIA_DEEPSEEK_API_KEY"),
         "moonshotai/kimi-k3": os.getenv("NVIDIA_KIMI_API_KEY")
     }
     
@@ -144,7 +149,10 @@ async def get_chats(x_user_uid: str | None = Header(default=None)):
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed. Ensure DATABASE_URL is set.")
     async with pool.acquire() as conn:
-        chats = await conn.fetch('SELECT id, title, created_at FROM chats WHERE user_uid = $1 ORDER BY created_at DESC', x_user_uid)
+        if x_user_uid:
+            chats = await conn.fetch('SELECT id, title, created_at FROM chats WHERE (user_uid = $1 OR user_uid IS NULL OR user_uid = \'anonymous\') ORDER BY created_at DESC', x_user_uid)
+        else:
+            chats = await conn.fetch('SELECT id, title, created_at FROM chats ORDER BY created_at DESC')
         return [{"id": row["id"], "title": row["title"], "created_at": row["created_at"]} for row in chats]
 
 @app.post("/chats")
@@ -154,7 +162,7 @@ async def create_chat(x_user_uid: str | None = Header(default=None)):
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed. Ensure DATABASE_URL is set.")
     async with pool.acquire() as conn:
-        chat_id = await conn.fetchval('INSERT INTO chats (title, user_uid) VALUES ($1, $2) RETURNING id', "New Chat", x_user_uid)
+        chat_id = await conn.fetchval('INSERT INTO chats (title, user_uid) VALUES ($1, $2) RETURNING id', "New Chat", x_user_uid or 'anonymous')
         return {"id": chat_id, "title": "New Chat"}
 
 @app.get("/chats/{chat_id}")
@@ -164,7 +172,7 @@ async def get_chat(chat_id: int, x_user_uid: str | None = Header(default=None)):
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed")
     async with pool.acquire() as conn:
-        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND user_uid = $2', chat_id, x_user_uid)
+        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND (user_uid = $2 OR user_uid IS NULL OR user_uid = \'anonymous\' OR $2 IS NULL)', chat_id, x_user_uid)
         if not chat:
             return {"messages": [], "files": []}
             
@@ -183,7 +191,7 @@ async def delete_chat(chat_id: int, x_user_uid: str | None = Header(default=None
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed")
     async with pool.acquire() as conn:
-        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND user_uid = $2', chat_id, x_user_uid)
+        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND (user_uid = $2 OR user_uid IS NULL OR user_uid = \'anonymous\' OR $2 IS NULL)', chat_id, x_user_uid)
         if not chat:
             return {"success": False, "error": "Unauthorized"}
             
@@ -204,7 +212,7 @@ async def upload_file(chat_id: int, file: FileUpload, x_user_uid: str | None = H
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed")
     async with pool.acquire() as conn:
-        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND user_uid = $2', chat_id, x_user_uid)
+        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND (user_uid = $2 OR user_uid IS NULL OR user_uid = \'anonymous\' OR $2 IS NULL)', chat_id, x_user_uid)
         if not chat:
             return {"error": "Unauthorized"}
             
@@ -221,7 +229,7 @@ async def delete_file(chat_id: int, file_id: int, x_user_uid: str | None = Heade
     if not pool:
         raise HTTPException(status_code=500, detail="Database connection failed")
     async with pool.acquire() as conn:
-        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND user_uid = $2', chat_id, x_user_uid)
+        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND (user_uid = $2 OR user_uid IS NULL OR user_uid = \'anonymous\' OR $2 IS NULL)', chat_id, x_user_uid)
         if not chat:
             return {"success": False, "error": "Unauthorized"}
             
@@ -295,7 +303,7 @@ CRITICAL INSTRUCTIONS for your script:
         )
 
     async with pool.acquire() as conn:
-        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND user_uid = $2', req.chat_id, x_user_uid)
+        chat = await conn.fetchval('SELECT id FROM chats WHERE id = $1 AND (user_uid = $2 OR user_uid IS NULL OR user_uid = \'anonymous\' OR $2 IS NULL)', req.chat_id, x_user_uid)
         if not chat:
             return StreamingResponse(
                 (f"data: {json.dumps({'content': 'Unauthorized access to chat.'})}\n\n" for _ in range(1)),
@@ -381,7 +389,6 @@ File Contents:"""
         
     async def event_generator():
         full_content = ""
-        stream = None
         target_model = req.model
         
         # Candidate models to try in order if the primary model returns 404/410 from NVIDIA
@@ -395,40 +402,38 @@ File Contents:"""
         
         for candidate in candidates:
             try:
+                cand_client, _ = get_client(candidate)
                 current_kwargs = dict(kwargs)
                 current_kwargs["model"] = candidate
-                stream = await client.chat.completions.create(**current_kwargs)
+                stream = await cand_client.chat.completions.create(**current_kwargs)
+                
+                async for chunk in stream:
+                    if not chunk.choices:
+                        continue
+                    delta = chunk.choices[0].delta
+                    reasoning = getattr(delta, "reasoning_content", None)
+                    content = getattr(delta, "content", None)
+                    
+                    payload = {}
+                    if reasoning is not None:
+                        payload["reasoning"] = reasoning
+                    if content is not None:
+                        payload["content"] = content
+                        full_content += content
+                        
+                    if payload:
+                        yield f"data: {json.dumps(payload)}\n\n"
+                        
                 break
             except Exception as e:
                 err_str = str(e)
-                print(f"[-] Candidate {candidate} failed: {err_str}")
-                # If 404 (function not found) or 410 (gone), try next candidate
-                if ("404" in err_str or "410" in err_str) and candidate != candidates[-1]:
+                print(f"[-] Candidate {candidate} failed during stream: {err_str}")
+                if not full_content and ("404" in err_str or "410" in err_str) and candidate != candidates[-1]:
                     continue
                 else:
                     yield f"data: {json.dumps({'error': err_str})}\n\n"
                     yield "data: [DONE]\n\n"
                     return
-
-        try:
-            async for chunk in stream:
-                if not chunk.choices:
-                    continue
-                delta = chunk.choices[0].delta
-                reasoning = getattr(delta, "reasoning_content", None)
-                content = getattr(delta, "content", None)
-                
-                payload = {}
-                if reasoning is not None:
-                    payload["reasoning"] = reasoning
-                if content is not None:
-                    payload["content"] = content
-                    full_content += content
-                    
-                if payload:
-                    yield f"data: {json.dumps(payload)}\n\n"
-        except Exception as e:
-            print(f"[-] API Error during stream: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
         
         if full_content:
