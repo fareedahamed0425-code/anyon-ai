@@ -163,8 +163,9 @@ function App() {
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(window.innerWidth > 768);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(window.innerWidth > 768);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   
   const chatEndRef = useRef(null);
@@ -203,7 +204,24 @@ function App() {
 
   useEffect(() => {
     fetchChats();
-  }, []);
+    
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        // Only auto-close on resize to mobile, don't force state to not allow opening
+        if (!isMobile) {
+          setIsLeftSidebarOpen(false);
+          setIsRightSidebarOpen(false);
+        }
+      } else {
+        setIsLeftSidebarOpen(true);
+        setIsRightSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]);
 
   const fetchChats = async () => {
     try {
@@ -513,6 +531,12 @@ function App() {
           </div>
         </div>
       )}
+      {isMobile && isLeftSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsLeftSidebarOpen(false)}></div>
+      )}
+      {isMobile && isRightSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsRightSidebarOpen(false)}></div>
+      )}
       <aside className={`sidebar glass-panel ${!isLeftSidebarOpen ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="brand">
@@ -579,8 +603,8 @@ function App() {
                 <option value="deepseek-ai/deepseek-v4-flash-0731">DeepSeek V4 Flash</option>
               </select>
             </div>
-            <Link to="/kimi" style={{ padding: '6px 14px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>🧠</span> Switch to Kimi K3 (Vision)
+            <Link to="/kimi" style={{ padding: '6px 14px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+              <span>🧠</span> {isMobile ? 'Kimi' : 'Switch to Kimi K3 (Vision)'}
             </Link>
             <button className="toggle-sidebar-btn" onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} title="Toggle Context">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="15" y1="3" x2="15" y2="21"></line></svg>

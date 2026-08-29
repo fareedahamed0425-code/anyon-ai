@@ -91,7 +91,8 @@ const KimiPage = () => {
   const [files, setFiles] = useState([]);
   const [chatId, setChatId] = useState(null);
   const [chatList, setChatList] = useState([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -158,7 +159,19 @@ const KimiPage = () => {
 
   useEffect(() => {
     fetchChats();
-  }, []);
+    
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        if (!isMobile) setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]);
 
   const createNewChat = async () => {
     try {
@@ -373,6 +386,9 @@ const KimiPage = () => {
 
   return (
     <div className="app-layout">
+      {isMobile && isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
       {/* Sidebar */}
       <aside className={`sidebar glass-panel ${!isSidebarOpen ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
@@ -429,11 +445,11 @@ const KimiPage = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <div style={{ padding: '6px 14px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>🧠</span> Kimi K3 Supercomputer (Vision)
+            <div style={{ padding: '6px 14px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+              <span>🧠</span> {isMobile ? 'Kimi K3' : 'Kimi K3 Supercomputer (Vision)'}
             </div>
-            <Link to="/" style={{ padding: '6px 12px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem' }}>
-              ← Base Models
+            <Link to="/" style={{ padding: '6px 12px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+              {isMobile ? '← Base' : '← Base Models'}
             </Link>
           </div>
         </header>

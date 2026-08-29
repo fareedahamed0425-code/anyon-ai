@@ -54,24 +54,10 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="app-layout" style={{ 
-      background: '#0a0a0a', 
-      backgroundImage: 'radial-gradient(circle at 50% 0%, #312e81 0%, transparent 60%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div className="glass-panel" style={{ 
-        width: '100%', 
-        maxWidth: '400px', 
-        padding: '2rem', 
-        borderRadius: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.5rem'
-      }}>
+    <div className="app-layout auth-layout">
+      <div className="glass-panel auth-panel">
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', background: 'linear-gradient(135deg, #a5b4fc, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h2 className="auth-title">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p style={{ color: 'var(--text-muted)' }}>
@@ -153,31 +139,16 @@ const AuthPage = () => {
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+        <div className="auth-divider">
+          <div className="divider-line"></div>
+          <span>OR</span>
+          <div className="divider-line"></div>
         </div>
 
         <button 
           onClick={handleGoogleAuth}
           disabled={loading}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            width: '100%',
-            padding: '12px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            color: 'white',
-            cursor: loading ? 'default' : 'pointer',
-            transition: 'background 0.2s',
-          }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          className="google-auth-btn"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
