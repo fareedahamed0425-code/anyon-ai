@@ -1186,5 +1186,20 @@ body {
     padding: 1.5rem;
     max-width: 90%;
   }
+
+  .input-form {
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Prevent header and input area from hiding on mobile scroll */
+  .glass-header.hidden {
+    transform: translateY(0);
+  }
+
+  .input-area.hidden {
+    transform: translateY(0);
+  }
 }
 
