@@ -1,4 +1,5 @@
 import os
+import asyncio
 import json
 import asyncpg
 import base64
@@ -483,7 +484,8 @@ File Contents:"""
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-def remove_file(path: str):
+async def remove_file(path: str):
+    await asyncio.sleep(300) # Wait 5 minutes to ensure download completes
     try:
         os.remove(path)
     except Exception as e:

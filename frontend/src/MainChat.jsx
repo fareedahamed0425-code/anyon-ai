@@ -631,6 +631,13 @@ function App() {
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
+                            a({ node, href, children, ...props }) {
+                              let fullHref = href;
+                              if (href && href.startsWith('/api/download')) {
+                                fullHref = `${API_BASE_URL}${href}`;
+                              }
+                              return <a href={fullHref} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+                            },
                             code({node, inline, className, children, ...props}) {
                               const match = /language-(\w+)/.exec(className || '');
                               const isMermaid = match && match[1] === 'mermaid';

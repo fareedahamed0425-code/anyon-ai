@@ -13,6 +13,10 @@ export default defineConfig({
       '/chat': {
         target: 'http://127.0.0.1:8008',
         changeOrigin: true
+      },
+      '/api': {
+        target: 'http://127.0.0.1:8008',
+        changeOrigin: true
       }
     }
   },
